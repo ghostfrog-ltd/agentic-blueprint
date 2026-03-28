@@ -2,6 +2,9 @@ import os
 import sys
 
 def create_blueprint(project_name):
+    # Standard backtick placeholder to avoid breaking Markdown rendering
+    bt = "```"
+    
     # 1. Create the Directory Structure
     paths = [
         project_name,
@@ -15,85 +18,95 @@ def create_blueprint(project_name):
 
     # 2. Define the Reliability Stack Templates
     files = {
-        "README.md": """# {project_name}
-### A Standard for Auditable Agentic Systems
-Built using **Documentation-Driven Orchestration (DDO)** to ensure deterministic AI behavior.
+        "README.md": f"# {project_name}\n"
+        "### A Standard for Auditable Agentic Systems\n"
+        "Built using **Documentation-Driven Orchestration (DDO)**.\n\n"
+        "## 🛡️ The Reliability Stack\n"
+        "* **AGENTS.md**: System Identity & Roles.\n"
+        "* **CONSTRAINTS.md**: Hard Guardrails & CFO Gates.\n"
+        "* **DECISION_LOG.md**: System Memory.\n"
+        "* **SKILL.md**: Verified Capability Playbooks.\n"
+        "* **SCHEMA.md**: Persistence Contracts (PostgreSQL).\n"
+        "* **PROGRESS.txt**: Atomic State Tracking.\n",
 
-## 🛡️ The Reliability Stack
-* **AGENTS.md**: System Identity & Roles.
-* **CONSTRAINTS.md**: Hard Guardrails & CFO Gates.
-* **DECISION_LOG.md**: System Memory.
-* **SKILL.md**: Verified Capability Playbooks.
-* **PROGRESS.txt**: Atomic State Tracking.
-""",
-        "AGENTS.md": """# AGENTS.md
-### System Identity & Orchestration
-* **Architect (Human)**: Primary Authority.
-* **Lead Junior (AI)**: Implementation & Cost Monitoring.
+        "AGENTS.md": "# AGENTS.md\n"
+        "### System Identity & Orchestration\n"
+        "* **Architect (Human)**: Primary Authority.\n"
+        "* **Lead Junior (AI)**: Implementation & Cost Monitoring.\n\n"
+        "**Persona**: Senior Developer Lead.\n"
+        "**Tone**: Grounded, data-backed, brutally honest.\n",
 
-**Persona**: Senior Developer Lead.
-**Tone**: Grounded, data-backed, brutally honest.
-**Directive**: Challenge the Architect if a "vibe" is inefficient or violates **CONSTRAINTS.md**.
-""",
-        "CONSTRAINTS.md": """# CONSTRAINTS.md
-### The Hard Guardrails
-* **No Stealth Execution**: All state-modifying calls require a safety gate.
-* **Vibe Budget**: Max $1.00 USD per individual research/execution loop.
-* **CFO Gate Rules**: 
-    - Max Notional: $10.00 (or project equivalent)
-    - Max Slots: 1 active execution at a time.
-* **Persistence**: PostgreSQL is the mandatory source of truth.
-""",
-        "DECISION_LOG.md": """# DECISION_LOG.md
-### System Memory & Audit Trail
-* **[2026-03-28] Infrastructure Setup**: 
-    - **Decision**: Implemented Workflow-Based Cost Accounting via SKILL.md.
-    - **Why**: To prevent "AI Bloom" from generating unmonitored API expenses.
-""",
-        "SKILL.md": """# SKILL.md
-### Verified Capability Playbook
+        "CONSTRAINTS.md": "# CONSTRAINTS.md\n"
+        "### The Hard Guardrails\n"
+        "* **No Stealth Execution**: All state-modifying calls require a safety gate.\n"
+        "* **Vibe Budget**: Max $1.00 USD per individual research/execution loop.\n"
+        "* **Persistence**: PostgreSQL is the mandatory source of truth.\n",
 
-**Skill: Cost-Aware Inference**
-* **Goal**: Track token consumption and USD spend per "vibe" (workflow).
-* **Logic**: 
-    1. Intercept LLM API response metadata (`usage` block).
-    2. Extract `input_tokens`, `output_tokens`, and `model_id`.
-    3. Calculate cost using current provider rate-cards stored in `cost_ledger`.
-* **Persistence**: Log `(workflow_id, model, tokens, estimated_cost_usd)` to **PostgreSQL**.
-* **Safety Check**: If cumulative workflow cost > $1.00, trigger **HALT** in `PROGRESS.txt`.
+        "DECISION_LOG.md": f"# DECISION_LOG.md\n"
+        "### System Memory & Audit Trail\n"
+        "* **[2026-03-28] Infrastructure Setup**: \n"
+        "    - **Decision**: Implemented PostgreSQL-first schema with automated cost-ledger.\n"
+        "    - **Why**: To maintain professional-grade audit trails.\n",
 
-**Skill: Agentic Audit**
-* **Goal**: Verify code changes against `CONSTRAINTS.md`.
-* **Logic**: Automated scan of PR diffs for "Hard No" patterns (e.g., unauthorized API calls).
-""",
+        "SKILL.md": "# SKILL.md\n"
+        "### Verified Capability Playbook\n\n"
+        "**Skill: Cost-Aware Inference**\n"
+        "* **Goal**: Track token consumption and USD spend per workflow.\n"
+        "* **Logic**: Intercept LLM response metadata and calculate cost vs. budget.\n"
+        "* **Persistence**: Write to `cost_ledger` table as defined in `SCHEMA.md`.\n",
+
+        "SCHEMA.md": "# SCHEMA.md\n"
+        "### Database Contract (PostgreSQL)\n\n"
+        f"{bt}sql\n"
+        "-- 1. Cost Ledger: Track every USD spent on inference\n"
+        "CREATE TABLE IF NOT EXISTS cost_ledger (\n"
+        "    id SERIAL PRIMARY KEY,\n"
+        "    timestamp TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,\n"
+        "    workflow_id UUID NOT NULL,\n"
+        "    agent_role VARCHAR(50),\n"
+        "    model_id VARCHAR(100),\n"
+        "    prompt_tokens INTEGER,\n"
+        "    completion_tokens INTEGER,\n"
+        "    estimated_cost_usd DECIMAL(10, 6),\n"
+        "    metadata JSONB\n"
+        ");\n\n"
+        "-- 2. Audit Log: Track state-modifying decisions\n"
+        "CREATE TABLE IF NOT EXISTS audit_log (\n"
+        "    id SERIAL PRIMARY KEY,\n"
+        "    timestamp TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,\n"
+        "    decision_type VARCHAR(50),\n"
+        "    logic_source VARCHAR(100),\n"
+        "    outcome VARCHAR(20),\n"
+        "    summary TEXT,\n"
+        "    payload JSONB\n"
+        ");\n"
+        f"{bt}\n",
+
         "PROGRESS.txt": "STATUS: Project Initialized. Current Session Cost: $0.00.",
-        ".github/workflows/agentic-audit.yml": """name: Agentic Constraint Audit
-on: [push, pull_request]
 
-jobs:
-  audit:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Run Reliability Stack Audit
-        uses: github/agentic-audit-action@v1 # 2026 DDO Standard
-        with:
-          agents_file: 'AGENTS.md'
-          constraints_file: 'CONSTRAINTS.md'
-          decision_log: 'DECISION_LOG.md'
-          fail_on_violation: true
-"""
+        ".github/workflows/agentic-audit.yml": "name: Agentic Constraint Audit\n"
+        "on: [push, pull_request]\n\n"
+        "jobs:\n"
+        "  audit:\n"
+        "    runs-on: ubuntu-latest\n"
+        "    steps:\n"
+        "      - uses: actions/checkout@v4\n"
+        "      - name: Run Reliability Stack Audit\n"
+        "        uses: github/agentic-audit-action@v1\n"
+        "        with:\n"
+        "          agents_file: 'AGENTS.md'\n"
+        "          constraints_file: 'CONSTRAINTS.md'\n"
+        "          decision_log: 'DECISION_LOG.md'\n"
+        "          fail_on_violation: true\n"
     }
 
     # 3. Write the Files
     for filename, content in files.items():
         with open(filename, "w") as f:
-            f.write(content.format(project_name=project_name))
+            f.write(content)
     
-    print(f"✅ Success: '{project_name}' initialized with the full Reliability Stack.")
+    print(f"✅ Success: '{project_name}' scaffolded with the Reliability Stack.")
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        create_blueprint("agentic-blueprint-repo")
-    else:
-        create_blueprint(sys.argv[1])
+    name = sys.argv[1] if len(sys.argv) > 1 else "agentic-blueprint-repo"
+    create_blueprint(name)
